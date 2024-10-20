@@ -1,0 +1,79 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
+
+public class RandomCubesGenerator : MonoBehaviour
+{
+    List<Vector3> positions = new List<Vector3>();  // Lista pozycji do generowania obiektów
+    public float delay = 3.0f;                      // Opóźnienie między generowaniem kolejnych obiektów
+    public int objectCount = 10;                    // Liczba obiektów do wygenerowania, edytowalna w Inspektorze
+    int objectCounter = 0;                          // Licznik obiektów
+    
+    // Obiekt do generowania
+    public GameObject block;
+
+    // Materiały do losowego przydzielania
+    public Material[] materials;
+
+    // Odniesienie do obiektu platformy (np. płaszczyzny), w której mają być generowane obiekty
+    private Renderer platformRenderer;
+
+    void Start()
+    {
+        // Pobierz renderer obiektu, do którego dołączony jest skrypt (np. platformy)
+        platformRenderer = GetComponent<Renderer>();
+
+        // Wygeneruj losowe pozycje na podstawie wielkości platformy
+        GenerateRandomPositions();
+        
+        // Uruchamiamy coroutine
+        StartCoroutine(GenerujObiekt());
+    }
+
+    void Update()
+    {
+        // Można dodać inne mechaniki, jeśli to konieczne
+    }
+
+    void GenerateRandomPositions()
+    {
+        Bounds platformBounds = platformRenderer.bounds;  // Granice platformy
+        float minX = platformBounds.min.x;
+        float maxX = platformBounds.max.x;
+        float minZ = platformBounds.min.z;
+        float maxZ = platformBounds.max.z;
+
+        // Generowanie unikalnych pozycji x i z dla obiektów
+        List<float> pozycje_x = new List<float>(Enumerable.Range(0, objectCount).Select(x => UnityEngine.Random.Range(minX, maxX)));
+        List<float> pozycje_z = new List<float>(Enumerable.Range(0, objectCount).Select(z => UnityEngine.Random.Range(minZ, maxZ)));
+
+        for (int i = 0; i < objectCount; i++)
+        {
+            // Dodanie wygenerowanych pozycji do listy
+            this.positions.Add(new Vector3(pozycje_x[i], platformBounds.max.y + 1, pozycje_z[i])); // y ustalamy nad platformą
+        }
+    }
+
+    IEnumerator GenerujObiekt()
+    {
+        Debug.Log("Wywołano coroutine");
+
+        foreach (Vector3 pos in positions)
+        {
+            // Tworzenie nowego obiektu
+            GameObject newObject = Instantiate(this.block, pos, Quaternion.identity);
+
+            // Losowe przypisanie materiału do nowo wygenerowanego obiektu
+            Material randomMaterial = materials[UnityEngine.Random.Range(0, materials.Length)];
+            newObject.GetComponent<Renderer>().material = randomMaterial;
+
+            // Odczekanie zgodnie z opóźnieniem
+            yield return new WaitForSeconds(this.delay);
+        }
+
+        // Zatrzymujemy coroutine, gdy wszystkie obiekty zostały wygenerowane
+        StopCoroutine(GenerujObiekt());
+    }
+}
