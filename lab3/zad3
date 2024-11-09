@@ -1,0 +1,54 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEditor;
+using UnityEngine;
+
+
+public class RuchPoKwadracie : MonoBehaviour
+{
+    public float speed = 20f;
+    public float sideLength = 10f;
+    public float rotationSpeed = 20f;
+
+    private int currentEdge = 0;
+    private Vector3 startPosition;
+    private bool isRotating = false;
+    void Start()
+    {
+        startPosition = transform.position;
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        if (!isRotating)
+        {
+            MoveAlongEdge();
+        }
+    }
+
+    void MoveAlongEdge()
+    {
+        transform.Translate(Vector3.forward * speed * Time.deltaTime);
+        if (Vector3.Distance(startPosition, transform.position) >= sideLength)
+        {
+            startPosition = transform.position;
+            StartCoroutine(Rotate90Degrees());
+        }
+    }    IEnumerator Rotate90Degrees()
+    {
+        isRotating = true;
+        float currentRotation = 0f;
+        while (currentRotation < 90f)
+        {
+            float rotationStep = rotationSpeed * Time.deltaTime * 90f;
+            transform.Rotate(0, rotationStep, 0);
+            currentRotation += rotationStep;
+            yield return null;
+        }
+
+        transform.rotation = Quaternion.Euler(0, Mathf.Round(transform.eulerAngles.y / 90) * 90, 0);
+
+        isRotating = false;
+    }
+}
